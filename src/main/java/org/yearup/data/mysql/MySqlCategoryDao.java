@@ -68,7 +68,10 @@ public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao
     public Category create(Category category)
     {
         // create a new category
-        return null;
+        String sql = "INSERT INTO categories(category_id, name, description) "
+                + " VALUES (?,?,?);";
+
+
     }
 
     @Override
