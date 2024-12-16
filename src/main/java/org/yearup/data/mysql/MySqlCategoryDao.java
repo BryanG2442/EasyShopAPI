@@ -1,5 +1,6 @@
 package org.yearup.data.mysql;
 
+import org.apache.ibatis.jdbc.SQL;
 import org.springframework.stereotype.Component;
 import org.yearup.data.CategoryDao;
 import org.yearup.models.Category;
@@ -68,22 +69,69 @@ public class MySqlCategoryDao extends MySqlDaoBase implements CategoryDao
     public Category create(Category category)
     {
         // create a new category
-        String sql = "INSERT INTO categories(category_id, name, description) "
-                + " VALUES (?,?,?);";
+        String sql = "INSERT INTO categories(name, description) "
+                + " VALUES (?,?);";
+        try (Connection connection = getConnection()){
+            PreparedStatement statement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
+            statement.setString(1, category.getName());
+            statement.setString(2, category.getDescription());
 
+            int rowsAffected = statement.executeUpdate();
 
+            if (rowsAffected > 0) {
+                ResultSet generatedKeys = statement.getGeneratedKeys();
+                if (generatedKeys.next()){
+                int orderID = generatedKeys.getInt(1);
+
+                return getById(orderID);
+                }
+            }
+
+        } catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
     @Override
     public void update(int categoryId, Category category)
     {
         // update category
+        String sql = "UPDATE categories" +
+                "SET name = ?," +
+                "    description = ?" +
+                "WHERE category_id = ?;";
+        try (Connection connection = getConnection()){
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1, category.getName());
+            statement.setString(2, category.getDescription());
+            statement.setInt(3, categoryId);
+
+            statement.executeUpdate();
+
+        }
+        catch (SQLException e){
+            throw new RuntimeException(e);
+        }
+
+
     }
 
     @Override
     public void delete(int categoryId)
     {
         // delete category
+        String sql = "DELETE FROM categories" +
+                " WHERE category_id = ?;";
+        try (Connection connection = getConnection()){
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setInt(1, categoryId);
+
+            statement.executeUpdate();
+        }
+        catch (SQLException e){
+            throw new RuntimeException(e);
+        }
     }
 
     private Category mapRow(ResultSet row) throws SQLException
