@@ -11,6 +11,7 @@ import org.yearup.data.ProductDao;
 import org.yearup.models.Category;
 import org.yearup.models.Product;
 
+import java.util.ArrayList;
 import java.util.List;
 
 // add the annotations to make this a REST controller
@@ -73,7 +74,17 @@ public class CategoriesController
     public List<Product> getProductsById(@PathVariable int categoryId)
     {
         // get a list of product by categoryId
-        return null;
+        try {
+            var category = categoryDao.getById(categoryId);
+            if (category == null)
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+
+            return productDao.listByCategoryId(categoryId);
+        }
+        catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Invalid ID");
+        }
     }
 
     // add annotation to call this method for a POST action
@@ -97,7 +108,18 @@ public class CategoriesController
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public void updateCategory(@PathVariable int id, @RequestBody Category category)
     {
-        // update the category by id
+        try {
+            var originalCategory = categoryDao.getById(id);
+
+            if (originalCategory == null){
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+
+            categoryDao.update(id, category);
+        }
+        catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error updating category");
+        }
     }
 
 
